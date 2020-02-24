@@ -12,11 +12,18 @@ exports.getAllTours = async (req, res) => {
     // {difficulty: 'easy', duration: { $gte: 5} }
     // { difficulty: 'easy', duration: { gte: '5' } }
     // gte, gt , lte, lt
-    console.log(queryObj);
     let queryStr = JSON.stringify(queryObj);
     queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`);
+    let query = Tour.find(JSON.parse(queryStr));
 
-    const query = Tour.find(JSON.parse(queryStr));
+    // Sorting filter
+    if (req.query.sort) {
+      // mongoose multiple sort('price ratingsAverage)
+      const sortBy = req.query.sort.split(',').join(' ');
+      query = query.sort(sortBy);
+    } else {
+      query = query.sort('-createdAt');
+    }
 
     // Execute query
     const tours = await query;

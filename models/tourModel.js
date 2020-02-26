@@ -49,12 +49,16 @@ const tourSchema = new mongoose.Schema(
       required: [true, 'A tour must have a cover image']
     },
     images: [String],
+    startDates: [Date],
+    secretTour: {
+      type: Boolean,
+      default: false
+    },
     createdAt: {
       type: Date,
       default: Date.now(),
       select: false
-    },
-    startDates: [Date]
+    }
   },
   // options object
   {
@@ -67,7 +71,7 @@ const tourSchema = new mongoose.Schema(
 tourSchema.virtual('durationWeeks').get(function() {
   return this.duration / 7;
 });
-
+// mongoose middlewares
 // pre document middleware: only runs before .save() and .create(), but not .insertMany()
 tourSchema.pre('save', function(next) {
   // adding slugs
@@ -81,6 +85,25 @@ tourSchema.pre('save', function(next) {
 //   console.log(doc);
 //   next();
 // });
+
+// query middleware: point at the current query instead of document
+tourSchema.pre(/^find/, function(next) {
+  this.find({ secretTour: { $ne: true } });
+  this.start = Date.now();
+  next();
+});
+
+tourSchema.post(/^find/, function(docs, next) {
+  console.log(`query took ${Date.now() - this.start} milliseconds`);
+
+  next();
+});
+
+// aggregation middleware
+tourSchema.pre('aggregate', function(next) {
+  this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
+  next();
+});
 
 const Tour = mongoose.model('Tour', tourSchema);
 

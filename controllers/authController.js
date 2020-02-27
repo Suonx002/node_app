@@ -62,7 +62,7 @@ exports.login = catchAsync(async (req, res, next) => {
 });
 
 // protected middleware
-exports.protected = catchAsync(async (req, res, next) => {
+exports.protect = catchAsync(async (req, res, next) => {
   let token;
   // getting the token and check if it's there
   if (
@@ -78,8 +78,8 @@ exports.protected = catchAsync(async (req, res, next) => {
     );
   }
 
-  // verification token
-  const decoded = await promisify(jwt.verify(token, process.env.JWT_SECRET));
+  // verification token\
+  const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
 
   // check if user still exists
   const currentUser = await User.findById(decoded.id);
@@ -101,3 +101,18 @@ exports.protected = catchAsync(async (req, res, next) => {
 
   next();
 });
+
+// authorize for certain roles only
+exports.authorize = (...roles) => {
+  return (req, res, next) => {
+    // roles is an array with spread operator: ['admin', 'lead-guide']
+    console.log(req.user);
+    if (!roles.includes(req.user.role)) {
+      return next(
+        new AppError('You do not have permission to perform this action.', 403)
+      );
+    }
+
+    next();
+  };
+};

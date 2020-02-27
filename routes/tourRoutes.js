@@ -2,7 +2,8 @@ const express = require('express');
 
 const router = express.Router();
 
-const tourController = require('../controllers/tourController');
+const tourController = require('./../controllers/tourController');
+const authController = require('./../controllers/authController');
 
 // alias route top 5 cheap
 router
@@ -23,6 +24,10 @@ router
   .route('/:id')
   .get(tourController.getTour)
   .patch(tourController.updateTour)
-  .delete(tourController.deleteTour);
+  .delete(
+    authController.protect,
+    authController.authorize('admin', 'lead-guide'),
+    tourController.deleteTour
+  );
 
 module.exports = router;

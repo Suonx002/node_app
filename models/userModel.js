@@ -17,7 +17,8 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     required: [true, 'Please provide a password'],
-    minlength: 8
+    minlength: 8,
+    select: false
   },
   passwordConfirm: {
     type: String,
@@ -34,6 +35,7 @@ const userSchema = new mongoose.Schema({
 });
 
 // mongoose middlewares
+// hashing password
 userSchema.pre('save', async function(next) {
   // only run this function if password was actually modified
   if (!this.isModified('password')) return next();
@@ -46,6 +48,15 @@ userSchema.pre('save', async function(next) {
   this.passwordConfirm = undefined;
   next();
 });
+
+// instance methods (available on all user documents)
+userSchema.methods.correctPassword = async function(
+  candidatePassword,
+  userPassword
+) {
+  // compare whether the password are the same or not.
+  return await bcrypt.compare(candidatePassword, userPassword);
+};
 
 const User = mongoose.model('User', userSchema);
 

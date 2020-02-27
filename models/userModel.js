@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
@@ -38,7 +39,9 @@ const userSchema = new mongoose.Schema({
       message: 'Password does not match'
     }
   },
-  passwordChangedAt: Date
+  passwordChangedAt: Date,
+  passwordResetToken: String,
+  passwordResetExpires: Date
 });
 
 // mongoose middlewares
@@ -53,6 +56,13 @@ userSchema.pre('save', async function(next) {
 
   // delete passwordConfirm field
   this.passwordConfirm = undefined;
+  next();
+});
+
+userSchema.pre('save', function(next) {
+  if (!this.isModified('password') || this.isNew) return next();
+
+  this.passwordChangedAt = Date.now() - 1000;
   next();
 });
 
@@ -77,6 +87,25 @@ userSchema.methods.changedPasswordAfter = function(JWTTimestamp) {
 
   // false mean NOT changed
   return false;
+};
+
+userSchema.methods.createPasswordResetToken = function() {
+  const resetToken = crypto.randomBytes(32).toString('hex');
+
+  // encrypted token
+  this.passwordResetToken = crypto
+    .createHash('sha256')
+    .update(resetToken)
+    .digest('hex');
+
+  // expires in 10 mins
+  this.passwordResetExpires = Date.now() + 10 * 60 * 1000;
+
+  console.log(resetToken);
+
+  console.log(this.passwordResetToken);
+  // send unencrypted token to email
+  return resetToken;
 };
 
 const User = mongoose.model('User', userSchema);

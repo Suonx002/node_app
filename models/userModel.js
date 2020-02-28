@@ -41,7 +41,12 @@ const userSchema = new mongoose.Schema({
   },
   passwordChangedAt: Date,
   passwordResetToken: String,
-  passwordResetExpires: Date
+  passwordResetExpires: Date,
+  active: {
+    type: Boolean,
+    default: true,
+    select: false
+  }
 });
 
 // mongoose middlewares
@@ -74,6 +79,14 @@ userSchema.methods.correctPassword = async function(
   // compare whether the password are the same or not.
   return await bcrypt.compare(candidatePassword, userPassword);
 };
+
+// query middleware
+// deactivate an account
+userSchema.pre(/^find/, function(next) {
+  // point to current query
+  this.find({ active: { $ne: false } });
+  next();
+});
 
 userSchema.methods.changedPasswordAfter = function(JWTTimestamp) {
   if (this.passwordChangedAt) {

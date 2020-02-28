@@ -17,6 +17,19 @@ const signToken = id => {
   return token;
 };
 
+const createSendToken = (user, statusCode, res) => {
+  // create token
+  const token = signToken(user._id);
+
+  res.status(statusCode).json({
+    status: 'success',
+    token,
+    data: {
+      user
+    }
+  });
+};
+
 exports.signup = catchAsync(async (req, res, next) => {
   const { name, email, password, passwordConfirm } = req.body;
 
@@ -27,16 +40,7 @@ exports.signup = catchAsync(async (req, res, next) => {
     passwordConfirm
   });
 
-  // create token
-  const token = signToken(newUser._id);
-
-  res.status(201).json({
-    status: 'success',
-    token,
-    data: {
-      user: newUser
-    }
-  });
+  createSendToken(newUser, 201, res);
 });
 
 exports.login = catchAsync(async (req, res, next) => {
@@ -55,12 +59,7 @@ exports.login = catchAsync(async (req, res, next) => {
   }
 
   // if everything okay, send token to client
-  const token = signToken(user._id);
-
-  res.status(200).json({
-    status: 'success',
-    token
-  });
+  createSendToken(user, 200, res);
 });
 
 // forgot password
@@ -136,12 +135,28 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
   // update changedPasswordAt property for the user
 
   // log the user in, send JWT to client
-  const token = signToken(user._id);
+  createSendToken(user, 200, res);
+});
 
-  res.status(200).json({
-    status: 'success',
-    token
-  });
+// update password
+
+exports.updatePassword = catchAsync(async (req, res, next) => {
+  // get user from collection
+  console.log(req.user);
+  const user = await User.findById(req.user.id).select('+password');
+
+  // check if POSTed current password is correct
+  if (!(await user.correctPassword(req.body.passwordCurrent, user.password))) {
+    return next(new AppError('Your current password is wrong', 401));
+  }
+  // if so , update password
+  // user.findByIdAndUpdate will NOT work as intended
+  user.password = req.body.password;
+  user.passwordConfirm = req.body.passwordConfirm;
+  await user.save();
+
+  // log user in and send JWT
+  createSendToken(user, 200, res);
 });
 
 // protected middleware

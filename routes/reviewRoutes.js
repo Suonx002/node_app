@@ -5,16 +5,16 @@ const router = express.Router({ mergeParams: true });
 const reviewController = require('./../controllers/reviewController');
 const authController = require('./../controllers/authController');
 
+router.use(authController.protect);
+
 // POST /tours/tourId/reviews
 // GET /tours/tourId/reviews
 //POST /reviews
 
 router
   .route('/')
-
   .get(reviewController.getAllReviews)
   .post(
-    authController.protect,
     authController.authorize('user'),
     reviewController.setTourUserIds,
     reviewController.createReview
@@ -23,7 +23,13 @@ router
 router
   .route('/:id')
   .get(reviewController.getReview)
-  .patch(reviewController.updateReview)
-  .delete(reviewController.deleteReview);
+  .patch(
+    authController.authorize('user', 'admin'),
+    reviewController.updateReview
+  )
+  .delete(
+    authController.authorize('user', 'admin'),
+    reviewController.deleteReview
+  );
 
 module.exports = router;

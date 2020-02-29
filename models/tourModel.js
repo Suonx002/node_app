@@ -123,6 +123,13 @@ const tourSchema = new mongoose.Schema(
 tourSchema.virtual('durationWeeks').get(function() {
   return this.duration / 7;
 });
+
+tourSchema.virtual('reviews', {
+  ref: 'Review',
+  foreignField: 'tour',
+  localField: '_id'
+});
+
 // mongoose middlewares
 // pre document middleware: only runs before .save() and .create(), but not .insertMany()
 tourSchema.pre('save', function(next) {

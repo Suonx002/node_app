@@ -1,8 +1,13 @@
 const express = require('express');
-const router = express.Router();
+// has access to tourId
+const router = express.Router({ mergeParams: true });
 
 const reviewController = require('./../controllers/reviewController');
 const authController = require('./../controllers/authController');
+
+// POST /tours/tourId/reviews
+// GET /tours/tourId/reviews
+//POST /reviews
 
 router
   .route('/')

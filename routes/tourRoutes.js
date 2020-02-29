@@ -4,6 +4,22 @@ const router = express.Router();
 
 const tourController = require('./../controllers/tourController');
 const authController = require('./../controllers/authController');
+const reviewRouter = require('./../routes/reviewRoutes');
+
+// POST /tours/134e/reviews
+// GET /tours/134e/reviews
+// GET /tours/134e/reviews/14sw
+
+// router
+//   .route('/:tourId/reviews')
+//   .post(
+//     authController.protect,
+//     authController.authorize('user'),
+//     reviewController.createReview
+//   );
+
+// mounting a router
+router.use('/:tourId/reviews', reviewRouter);
 
 // alias route top 5 cheap
 router

@@ -55,7 +55,7 @@ exports.getAll = Model =>
 
     // Execute query
     // query.sort().select().skip()....
-    const document = await features.query.explain();
+    const document = await features.query;
 
     // Send response
     res.status(200).json({

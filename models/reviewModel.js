@@ -35,22 +35,8 @@ const reviewSchema = new mongoose.Schema(
   }
 );
 
-reviewSchema.pre(/^find/, function(next) {
-  //   this.populate({
-  //     path: 'tour',
-  //     select: 'name'
-  //   }).populate({
-  //     path: 'user',
-  //     select: 'name photo'
-  //   });
-
-  this.populate({
-    path: 'user',
-    select: 'name photo'
-  });
-
-  next();
-});
+// Indexes
+reviewSchema.index({ tour: 1, user: 1 }, { unique: true });
 
 // static methods
 reviewSchema.statics.calcAverageRatings = async function(tourId) {
@@ -81,6 +67,23 @@ reviewSchema.statics.calcAverageRatings = async function(tourId) {
     });
   }
 };
+
+reviewSchema.pre(/^find/, function(next) {
+  //   this.populate({
+  //     path: 'tour',
+  //     select: 'name'
+  //   }).populate({
+  //     path: 'user',
+  //     select: 'name photo'
+  //   });
+
+  this.populate({
+    path: 'user',
+    select: 'name photo'
+  });
+
+  next();
+});
 
 reviewSchema.post('save', function() {
   // this points to current review

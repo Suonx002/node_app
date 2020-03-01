@@ -215,37 +215,44 @@ exports.protect = catchAsync(async (req, res, next) => {
 
   // Grant access to the protected route
   req.user = currentUser;
+  //for template
+  res.locals.user = currentUser;
 
   next();
 });
 
 // only for rendered pages, no errors middleware
-exports.isLoggedIn = catchAsync(async (req, res, next) => {
+exports.isLoggedIn = async (req, res, next) => {
   // getting the token and check if it's there
   if (req.cookies.jwt) {
-    // verification token\
-    const decoded = await promisify(jwt.verify)(
-      req.cookies.jwt,
-      process.env.JWT_SECRET
-    );
+    try {
+      // verification token\
+      const decoded = await promisify(jwt.verify)(
+        req.cookies.jwt,
+        process.env.JWT_SECRET
+      );
 
-    // check if user still exists
-    const currentUser = await User.findById(decoded.id);
-    if (!currentUser) {
+      // check if user still exists
+      const currentUser = await User.findById(decoded.id);
+      if (!currentUser) {
+        return next();
+      }
+
+      // check if user changed password after the token was issued.
+      if (currentUser.changedPasswordAfter(decoded.iat)) {
+        return next();
+      }
+
+      // There is a logged in user
+      res.locals.user = currentUser;
+      return next();
+    } catch (err) {
       return next();
     }
-
-    // check if user changed password after the token was issued.
-    if (currentUser.changedPasswordAfter(decoded.iat)) {
-      return next();
-    }
-
-    // There is a logged in user
-    res.locals.user = currentUser;
-    return next();
   }
+
   next();
-});
+};
 
 // authorize for certain roles only
 exports.authorize = (...roles) => {
@@ -260,4 +267,15 @@ exports.authorize = (...roles) => {
 
     next();
   };
+};
+
+exports.logout = (req, res) => {
+  res.cookie('jwt', 'loggedout', {
+    expires: new Date(Date.now() + 10 * 1000),
+    httpOnly: true
+  });
+
+  res.status(200).json({
+    status: 'success'
+  });
 };

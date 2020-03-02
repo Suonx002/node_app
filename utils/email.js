@@ -39,8 +39,17 @@ module.exports = class Email {
 
   newTransport() {
     if (process.env.NODE_ENV === 'production') {
-      //sendgrid
-      return 1;
+      console.log(process.env.NODE_ENV === 'production');
+      // Sendgrid
+      return nodemailer.createTransport({
+        // service: 'SendGrid',
+        host: process.env.MAILGUN_HOST,
+        port: process.env.MAILGUN_PORT,
+        auth: {
+          user: process.env.MAILGUN_USERNAME,
+          pass: process.env.MAILGUN_PASSWORD
+        }
+      });
     }
 
     // create a transporter
@@ -80,6 +89,13 @@ module.exports = class Email {
   }
 
   async sendWelcome() {
-    await this.send('Welcome', 'Welcome to the Natours Family!');
+    await this.send('welcome', 'Welcome to the Natours Family!');
+  }
+
+  async sendPasswordReset() {
+    await this.send(
+      'passwordReset',
+      'Your password reset token (valid for only 10 minutes)'
+    );
   }
 };

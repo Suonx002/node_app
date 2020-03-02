@@ -1,4 +1,5 @@
 const express = require('express');
+
 const router = express.Router();
 
 const userController = require('./../controllers/userController');
@@ -22,7 +23,11 @@ router.get(
   userController.getMe,
   userController.getUser
 );
-router.patch('/updateMe', userController.updateMe);
+router.patch(
+  '/updateMe',
+  userController.uploadUserPhoto,
+  userController.updateMe
+);
 router.delete('/deleteMe', userController.deleteMe);
 
 router

@@ -42,3 +42,12 @@ process.on('unhandledRejection', err => {
     process.exit(1);
   });
 });
+
+// dyno heroku sig term signal
+process.on('SIGTERM', () => {
+  console.log('DIGTERM RECEIVED. Shutting down gracefully');
+
+  server.close(() => {
+    console.log('Process terminated');
+  });
+});

@@ -1,4 +1,7 @@
+// multer handle multi data form
 const multer = require('multer');
+//sharp is handling resize
+const sharp = require('sharp');
 
 const User = require('./../models/userModel');
 const catchAsync = require('./../utils/catchAsync');
@@ -6,17 +9,20 @@ const AppError = require('./../utils/appError');
 const factory = require('./handlerFactoryController');
 
 // multer
-// multer storage
-const multerStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'public/img/users');
-  },
-  filename: (req, file, cb) => {
-    // user-78945ds-4646.jpeg
-    const extension = file.mimetype.split('/')[1];
-    cb(null, `user-${req.user.id}-${Date.now()}.${extension}`);
-  }
-});
+// multer disk storage
+// const multerStorage = multer.diskStorage({
+//   destination: (req, file, cb) => {
+//     cb(null, 'public/img/users');
+//   },
+//   filename: (req, file, cb) => {
+//     // user-78945ds-4646.jpeg
+//     const extension = file.mimetype.split('/')[1];
+//     cb(null, `user-${req.user.id}-${Date.now()}.${extension}`);
+//   }
+// });
+
+// multer memory storage
+const multerStorage = multer.memoryStorage();
 
 //test whether the upload file is an image
 const multerFilter = (req, file, cb) => {
@@ -32,6 +38,23 @@ const upload = multer({
   fileFilter: multerFilter
 });
 
+exports.uploadUserPhoto = upload.single('photo');
+
+exports.resizeUserPhoto = (req, res, next) => {
+  if (!req.file) return next();
+
+  req.file.filename = `user-${req.user.id}-${Date.now()}.jpeg`;
+
+  sharp(req.file.buffer)
+    .resize(500, 500)
+    .toFormat('jpeg')
+    .jpeg({ quality: 90 })
+    .toFile(`public/img/users/${req.file.filename}`);
+
+  next();
+};
+
+// filter options
 const filterObj = (obj, ...allowedFields) => {
   const newObj = {};
   Object.keys(obj).forEach(el => {
@@ -40,8 +63,6 @@ const filterObj = (obj, ...allowedFields) => {
 
   return newObj;
 };
-
-exports.uploadUserPhoto = upload.single('photo');
 
 exports.getMe = (req, res, next) => {
   req.params.id = req.user.id;

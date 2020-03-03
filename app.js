@@ -61,7 +61,7 @@ const limiter = rateLimit({
 app.use('/api', limiter);
 
 // stripe web hook (must not be in JSON. need to be in RAW form)
-app.pose(
+app.post(
   '/webhook-checkout',
   express.raw({ type: 'application/json' }),
   bookingController.webhookCheckout

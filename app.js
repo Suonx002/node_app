@@ -7,6 +7,7 @@ const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const hpp = require('hpp');
 const cookieParser = require('cookie-parser');
+const cors = require('cors');
 const compression = require('compression');
 
 const AppError = require('./utils/appError');
@@ -27,6 +28,17 @@ app.set('view engine', 'pug');
 app.set('views', path.join(__dirname, 'views'));
 
 // global middlewares
+// api.natours.com , frontend natours.com
+// app.use(cor({
+//   origin: 'https://www.natours.com'
+// }))
+
+// implement CORS, set Access-COntrol-Allow-Origin to everywhere
+app.use(cors());
+
+// http methods response for preflight phase
+app.options('*', cors());
+
 // serving static files
 app.use(express.static(path.join(__dirname, 'public')));
 

@@ -12,6 +12,7 @@ const compression = require('compression');
 
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/errorController');
+const bookingController = require('./controllers/bookingController');
 
 const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
@@ -58,6 +59,13 @@ const limiter = rateLimit({
 });
 
 app.use('/api', limiter);
+
+// stripe web hook (must not be in JSON. need to be in RAW form)
+app.pose(
+  '/webhook-checkout',
+  express.raw({ type: 'application/json' }),
+  bookingController.webhookCheckout
+);
 
 // body parser, reading data body into req.body
 app.use(express.json({ limit: '10kb' }));
